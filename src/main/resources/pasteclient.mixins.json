@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "uwu.smsgamer.pasteclient.injection.mixins",
+  "refmap": "mixins.pasteclient.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "client.MixinMinecraft",
+    "client.MixinNetworkManager",
+    "entity.MixinEntity",
+    "entity.MixinEntityPlayer",
+    "entity.MixinEntityPlayerSP",
+    "gui.MixinGuiChat",
+    "gui.MixinGuiIngame",
+    "gui.MixinGuiScreen",
+    "gui.MixinGuiSpectator",
+    "gui.MixinGuiChat",
+    "render.MixinEntityRenderer",
+    "util.MixinMouseHelper",
+    "util.MixinTimer"
+  ]
+}

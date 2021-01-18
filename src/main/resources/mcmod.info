@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "pasteclient",
+    "name": "PasteClient",
+    "description": "",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "updateUrl": "",
+    "authorList": [
+      "Sms_Gamer_3808",
+      "superblaubeere27"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

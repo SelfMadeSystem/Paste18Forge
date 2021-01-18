@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "clientVersion": 1.0
+  },
+  "modules": {
+    "Fly": {
+      "state": false,
+      "keybind": 33
+    },
+    "FlagDetector": {
+      "state": true,
+      "keybind": 0
+    },
+    "DemoMode": {
+      "state": false,
+      "keybind": 34
+    },
+    "ClickGUI": {
+      "state": false,
+      "keybind": 54
+    },
+    "HUD": {
+      "state": true,
+      "keybind": 0
+    }
+  },
+  "values": {
+    "Fly": {
+      "Speed": 0.4,
+      "Mode": 0
+    },
+    "FlagDetector": {
+      "Disable Modules": true
+    },
+    "DemoMode": {},
+    "ClickGUI": {
+      "Mode": 0
+    },
+    "HUD": {
+      "FPSStatisticLength": 250.0
+    }
+  }
+}
