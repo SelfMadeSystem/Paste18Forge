@@ -2,10 +2,12 @@ package uwu.smsgamer.pasteclient.modules.modules.combat;
 
 import com.darkmagician6.eventapi.EventTarget;
 import com.darkmagician6.eventapi.types.EventType;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.*;
+import org.apache.logging.log4j.LogManager;
 import uwu.smsgamer.pasteclient.events.*;
 import uwu.smsgamer.pasteclient.injection.interfaces.IMixinMouseHelper;
 import uwu.smsgamer.pasteclient.modules.*;
@@ -13,6 +15,7 @@ import uwu.smsgamer.pasteclient.utils.*;
 import uwu.smsgamer.pasteclient.values.*;
 
 import java.awt.*;
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class KillAura extends PasteModule {
@@ -170,7 +173,7 @@ public class KillAura extends PasteModule {
                     throw new IllegalStateException("Unexpected value: " + aimMode.getValue());
             }
             if (!silent.getValue()) rotation.toPlayer();
-            attack();
+//            attack();
         } else {
             prevYaw = yaw;
             prevPitch = pitch;
@@ -206,6 +209,7 @@ public class KillAura extends PasteModule {
             if (justHit.getValue()) {
                 if (targetMode.getValue() == 2) switchCount++;
                 mc.playerController.attackEntity(mc.thePlayer, lastTarget);
+                mc.thePlayer.swingItem();
             } else {
                 float rY = mc.thePlayer.rotationYaw;
                 float rP = mc.thePlayer.rotationPitch;
@@ -216,21 +220,73 @@ public class KillAura extends PasteModule {
                 mc.thePlayer.prevRotationYaw = prevYaw;
                 mc.thePlayer.prevRotationPitch = prevPitch;
                 MovingObjectPosition result = RaycastUtils.getObjectMouseOver(1, mc.thePlayer, reach.getValue(), 6);
+                clickMouse(result);
                 mc.thePlayer.rotationYaw = rY;
                 mc.thePlayer.rotationPitch = rP;
                 mc.thePlayer.prevRotationYaw = pRY;
                 mc.thePlayer.prevRotationPitch = pRP;
-                if (result.entityHit != null) {
+                /*if (result.entityHit != null) {
                     if (targetMode.getValue() == 2) switchCount++;
                     mc.playerController.attackEntity(mc.thePlayer, result.entityHit);
                 } else if (result.typeOfHit.equals(MovingObjectPosition.MovingObjectType.BLOCK)) {
                     mc.playerController.clickBlock(result.getBlockPos(), result.sideHit);
-                }
+                }*/
             }
             double min = minCPS.getValue();
             double max = maxCPS.getValue();
             nextAttack = (int) (Math.random() * (max - min) + min);
+        }
+    }
+
+    private void clickMouse(MovingObjectPosition objectMouseOver) {
+        Field lcc = null;
+        try {
+            lcc = mc.getClass().getDeclaredField("leftClickCounter");
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        int leftClickCounter = 0;
+        if (lcc != null) {
+            try {
+                lcc.setAccessible(true);
+                leftClickCounter = (int) lcc.get(mc);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (leftClickCounter <= 0) {
             mc.thePlayer.swingItem();
+            if (objectMouseOver == null) {
+                LogManager.getLogger().error("Null returned as 'hitResult', this shouldn't happen!");
+                if (mc.playerController.isNotCreative()) {
+                    leftClickCounter = 10;
+                }
+            } else {
+                switch (objectMouseOver.typeOfHit) {
+                    case ENTITY:
+                        mc.playerController.attackEntity(mc.thePlayer, objectMouseOver.entityHit);
+                        break;
+                    case BLOCK:
+                        BlockPos blockpos = objectMouseOver.getBlockPos();
+                        if (mc.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air) {
+                            mc.playerController.clickBlock(blockpos, objectMouseOver.sideHit);
+                            break;
+                        }
+                    case MISS:
+                    default:
+                        if (mc.playerController.isNotCreative()) {
+                            leftClickCounter = 10;
+                        }
+                }
+            }
+        }
+        if (lcc != null) {
+            try {
+                lcc.set(mc, leftClickCounter);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
     }
 
