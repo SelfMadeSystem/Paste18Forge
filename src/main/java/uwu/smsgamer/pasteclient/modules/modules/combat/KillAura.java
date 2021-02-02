@@ -31,7 +31,8 @@ public class KillAura extends PasteModule {
     public IntChoiceValue aimMode = addIntChoice("AimMode", "How to aim at entities.", 0,
       0, "Normal",
       1, "GCD Patch",
-      2, "Emulate MouseHelper");
+      2, "To MouseHelper Pixels",
+      3, "Emulate MouseHelper");
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -58,6 +59,15 @@ public class KillAura extends PasteModule {
     public NumberValue aimRandomYaw = (NumberValue) addValue(new NumberValue("AimRandomYaw", "Randomizes your yaw in degrees.", 2, 0, 15, 0.1, NumberValue.NumberType.DECIMAL));
     public NumberValue aimRandomPitch = (NumberValue) addValue(new NumberValue("AimRandomPitch", "Error loading description.", 2, 0, 15, 0.1, NumberValue.NumberType.DECIMAL));
     public BoolValue silent = addBool("Silent", "If the KillAura rotations are silent.", true);
+    public IntChoiceValue rotationStrafe = (IntChoiceValue) addValue(new IntChoiceValue("RotationStrafe", "How to aim at entities.", 0,
+      new StringHashMap<>(0, "Off",
+        1, "Strict",
+        2, "Dynamic")) {
+        @Override
+        public boolean isVisible() {
+            return silent.getValue();
+        }
+    });
     public BoolValue mark = addBool("Mark", "Whether to mark where you're aiming at.", true);
     public BoolValue justHit = addBool("JustHit", "Just hit the entity and don't fuck around w/ raycast bs.", false);
     public FancyColorValue color = (FancyColorValue) addValue(new FancyColorValue("Mark Color", "Color for the marker.", new Color(0, 255, 0, 64)) {
@@ -78,10 +88,7 @@ public class KillAura extends PasteModule {
         targetOrder.addChild(maxAngle = genInt("MaxAngle", "Maximum angle the entity has to be in degrees.", 180, 0, 180));
     }
 
-    public float yaw;
-    public float pitch;
-    public float prevYaw;
-    public float prevPitch;
+    public CustomMouseHelper mh = new CustomMouseHelper();
     public Entity lastTarget;
     public Rotation startAngle;
     public int switchCount;
@@ -89,10 +96,11 @@ public class KillAura extends PasteModule {
     @Override
     protected void onEnable() {
         if (mc.thePlayer != null) {
-            prevYaw = mc.thePlayer.prevRotationYaw;
-            prevPitch = mc.thePlayer.prevRotationPitch;
-            yaw = mc.thePlayer.rotationYaw;
-            pitch = mc.thePlayer.rotationPitch;
+            mh.reinitialize();
+            mh.prevYaw = mc.thePlayer.prevRotationYaw;
+            mh.prevPitch = mc.thePlayer.prevRotationPitch;
+            mh.yaw = mc.thePlayer.rotationYaw;
+            mh.pitch = mc.thePlayer.rotationPitch;
             startAngle = Rotation.player();
         }
     }
@@ -140,45 +148,58 @@ public class KillAura extends PasteModule {
         } else target = lastTarget;
         if (target != null) {
             if (mark.getValue()) render(target);
-            RotationUtil util = new RotationUtil(target, yaw, pitch);
+            RotationUtil util = new RotationUtil(target, mh.yaw, mh.pitch);
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
             Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue());
-            rotation = RotationUtil.limitAngleChange(new Rotation(yaw, pitch), rotation, aimLimit);
-            Rotation r = RotationUtil.rotationDiff(rotation, new Rotation(yaw, pitch));
-            boolean moving = r.yaw != 0 || r.pitch != 0;
-            rotation = new Rotation(rotation.yaw + (!moving ? 0 : aimRandomYaw.getValue() * Math.random() - aimRandomYaw.getValue() / 2),
-              rotation.pitch + (!moving ? 0 : aimRandomPitch.getValue() * Math.random() - aimRandomPitch.getValue() / 2));
+            if (aimMode.getValue() != 3) {
+                rotation = RotationUtil.limitAngleChange(mh.toRotation(), rotation, aimLimit);
+                Rotation r = RotationUtil.rotationDiff(rotation, new Rotation(mh.yaw, mh.pitch));
+                boolean moving = r.yaw != 0 || r.pitch != 0;
+                rotation = new Rotation(rotation.yaw + (!moving ? 0 : aimRandomYaw.getValue() * Math.random() - aimRandomYaw.getValue() / 2),
+                  rotation.pitch + (!moving ? 0 : aimRandomPitch.getValue() * Math.random() - aimRandomPitch.getValue() / 2));
+            }
             switch (aimMode.getValue()) {
                 case 1:
                     double f = mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
                     double gcd = f * f * f * 1.2F;
                     rotation = new Rotation(rotation.yaw - rotation.yaw % gcd, rotation.pitch - rotation.pitch % gcd);
                 case 0:
-                    prevYaw = yaw;
-                    prevPitch = pitch;
-                    yaw += RotationUtil.angleDiff(rotation.yaw.floatValue(), yaw);
-                    pitch = rotation.pitch.floatValue();
+                    mh.prevYaw = mh.yaw;
+                    mh.prevPitch = mh.pitch;
+                    mh.yaw += RotationUtil.angleDiff(rotation.yaw.floatValue(), mh.yaw);
+                    mh.pitch = rotation.pitch.floatValue();
                     break;
                 case 2:
-                    int amtX = MathUtil.toMouse(RotationUtil.angleDiff(rotation.yaw.floatValue(), yaw));
-                    int amtY = MathUtil.toMouse(RotationUtil.angleDiff(rotation.pitch.floatValue(), pitch));
+                    int amtX = MathUtil.toMouse(RotationUtil.angleDiff(rotation.yaw.floatValue(), mh.yaw));
+                    int amtY = MathUtil.toMouse(RotationUtil.angleDiff(rotation.pitch.floatValue(), mh.pitch));
                     double aX = MathUtil.toDeg(amtX);
                     double aY = MathUtil.toDeg(amtY);
-                    yaw += aX;
-                    pitch += aY;
+                    mh.yaw += aX;
+                    mh.pitch += aY;
+                    break;
+                case 3:
+                    rotation = RotationUtil.rotationDiff(rotation, mh.toRotation());
+                    boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
+                    mh.deltaX = (int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
+                      (!moving ? 0 : (aimRandomYaw.getValue() * 2 * Math.random() - aimRandomYaw.getValue())));
+                    mh.deltaY = (int) (Math.min(aimLimit,
+                      Math.max(-aimLimit, rotation.pitchToMouse())) * (mc.gameSettings.invertMouse ? 1 : -1) +
+                      (!moving ? 0 : (aimRandomPitch.getValue() * 2 * Math.random() - aimRandomPitch.getValue())));
+                    mh.rotate();
                     break;
                 default:
                     throw new IllegalStateException("Unexpected value: " + aimMode.getValue());
             }
-            if (!silent.getValue()) rotation.toPlayer();
+            if (!silent.getValue()) mh.toPlayer();
 //            attack();
         } else {
-            prevYaw = yaw;
-            prevPitch = pitch;
-            yaw = mc.thePlayer.rotationYaw;
-            pitch = mc.thePlayer.rotationPitch;
+            mh.reinitialize();
+            mh.prevYaw = mh.yaw;
+            mh.prevPitch = mh.pitch;
+            mh.yaw = mc.thePlayer.rotationYaw;
+            mh.pitch = mc.thePlayer.rotationPitch;
         }
     }
 
@@ -187,12 +208,12 @@ public class KillAura extends PasteModule {
         if (!getState()) return;
         Packet<?> packet = event.getPacket();
         if (packet.getClass().equals(C03PacketPlayer.C05PacketPlayerLook.class)) {
-            event.setPacket(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, ((C03PacketPlayer.C05PacketPlayerLook) packet).isOnGround()));
+            event.setPacket(new C03PacketPlayer.C05PacketPlayerLook(mh.yaw, mh.pitch, ((C03PacketPlayer.C05PacketPlayerLook) packet).isOnGround()));
         } else if (packet.getClass().equals(C03PacketPlayer.C06PacketPlayerPosLook.class)) {
             event.setPacket(new C03PacketPlayer.C06PacketPlayerPosLook(((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionX(),
               ((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionY(),
               ((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionZ(),
-              yaw, pitch, ((C03PacketPlayer.C06PacketPlayerPosLook) packet).isOnGround()));
+              mh.yaw, mh.pitch, ((C03PacketPlayer.C06PacketPlayerPosLook) packet).isOnGround()));
         }
     }
 
@@ -200,6 +221,44 @@ public class KillAura extends PasteModule {
     private void onUpdate(UpdateEvent event) {
         if (!getState()) return;
         if (event.getEventType().equals(EventType.PRE)) attack();
+    }
+
+    @EventTarget
+    private void onStrafe(StrafeEvent event) { // thx LB
+        if (lastTarget != null && silent.getValue()) {
+            switch (rotationStrafe.getValue()) {
+                case 1: {
+                    double strafe = event.strafe;
+                    double forward = event.forward;
+                    double friction = event.friction;
+
+                    double f = strafe * strafe + forward * forward;
+
+                    if (f >= 1.0E-4F) {
+                        f = Math.sqrt(f);
+
+                        if (f < 1.0F)
+                            f = 1.0F;
+
+                        f = friction / f;
+                        strafe *= f;
+                        forward *= f;
+
+                        double yawSin = MathUtil.sin(mh.yaw * Math.PI / 180F);
+                        double yawCos = MathUtil.cos(mh.yaw * Math.PI / 180F);
+
+                        mc.thePlayer.motionX += strafe * yawCos - forward * yawSin;
+                        mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin;
+                    }
+                    event.setCancelled(true);
+                    break;
+                }
+                case 2: {
+                    new Rotation(mh.yaw, mh.pitch).applyStrafeToPlayer();
+                    event.setCancelled(true);
+                }
+            }
+        }
     }
 
     private int nextAttack;
@@ -215,10 +274,10 @@ public class KillAura extends PasteModule {
                 float rP = mc.thePlayer.rotationPitch;
                 float pRY = mc.thePlayer.prevRotationYaw;
                 float pRP = mc.thePlayer.prevRotationPitch;
-                mc.thePlayer.rotationYaw = yaw;
-                mc.thePlayer.rotationPitch = pitch;
-                mc.thePlayer.prevRotationYaw = prevYaw;
-                mc.thePlayer.prevRotationPitch = prevPitch;
+                mc.thePlayer.rotationYaw = mh.yaw;
+                mc.thePlayer.rotationPitch = mh.pitch;
+                mc.thePlayer.prevRotationYaw = mh.prevYaw;
+                mc.thePlayer.prevRotationPitch = mh.prevPitch;
                 MovingObjectPosition result = RaycastUtils.getObjectMouseOver(1, mc.thePlayer, reach.getValue(), 6);
                 clickMouse(result);
                 mc.thePlayer.rotationYaw = rY;
@@ -265,6 +324,7 @@ public class KillAura extends PasteModule {
             } else {
                 switch (objectMouseOver.typeOfHit) {
                     case ENTITY:
+                        if (targetMode.getValue() == 2) switchCount++;
                         mc.playerController.attackEntity(mc.thePlayer, objectMouseOver.entityHit);
                         break;
                     case BLOCK:

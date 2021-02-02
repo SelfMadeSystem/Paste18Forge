@@ -10,9 +10,14 @@
 
 package uwu.smsgamer.pasteclient.injection.mixins.entity;
 
+import com.darkmagician6.eventapi.EventManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import uwu.smsgamer.pasteclient.events.StrafeEvent;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
@@ -32,4 +37,17 @@ public abstract class MixinEntity {
 
     @Shadow
     public boolean onGround;
+
+    @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
+    private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
+        //noinspection ConstantConditions
+        if ((Object) this != Minecraft.getMinecraft().thePlayer)
+            return;
+
+        final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
+        EventManager.call(strafeEvent);
+
+        if (strafeEvent.isCancelled())
+            callbackInfo.cancel();
+    }
 }

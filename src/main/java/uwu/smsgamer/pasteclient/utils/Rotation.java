@@ -56,4 +56,86 @@ public class Rotation {
             length = playerYawDiff() * playerYawDiff() + playerPitchDiff() * playerPitchDiff();
         return length;
     }
+
+    public void applyStrafeToPlayer() { // If it's not obvious, this is from LB xD
+        /*val player = mc.thePlayer!!
+
+          val dif = ((WMathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
+          - 23.5f - 135)
+          + 180) / 45).toInt()
+
+        val yaw = this.yaw
+
+        val strafe = event.strafe
+        val forward = event.forward
+        val friction = event.friction
+
+        var calcForward = 0f
+        var calcStrafe = 0f
+
+        when (dif) {
+            0 -> {
+                calcForward = forward
+                calcStrafe = strafe
+            }
+            1 -> {
+                calcForward += forward
+                calcStrafe -= forward
+                calcForward += strafe
+                calcStrafe += strafe
+            }
+            2 -> {
+                calcForward = strafe
+                calcStrafe = -forward
+            }
+            3 -> {
+                calcForward -= forward
+                calcStrafe -= forward
+                calcForward += strafe
+                calcStrafe -= strafe
+            }
+            4 -> {
+                calcForward = -forward
+                calcStrafe = -strafe
+            }
+            5 -> {
+                calcForward -= forward
+                calcStrafe += forward
+                calcForward -= strafe
+                calcStrafe -= strafe
+            }
+            6 -> {
+                calcForward = -strafe
+                calcStrafe = forward
+            }
+            7 -> {
+                calcForward += forward
+                calcStrafe += forward
+                calcForward -= strafe
+                calcStrafe += strafe
+            }
+        }
+
+        if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
+            calcForward *= 0.5f
+        }
+
+        if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
+            calcStrafe *= 0.5f
+        }
+
+        var d = calcStrafe * calcStrafe + calcForward * calcForward
+
+        if (d >= 1.0E-4f) {
+            d = sqrt(d)
+            if (d < 1.0f) d = 1.0f
+            d = friction / d
+            calcStrafe *= d
+            calcForward *= d
+            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
+            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
+            player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
+            player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
+        }*/
+    }
 }

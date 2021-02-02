@@ -5,7 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "client.MixinMinecraft",
-    "client.MixinNetworkManager",
+    "network.MixinNetworkManager",
     "entity.MixinEntity",
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
