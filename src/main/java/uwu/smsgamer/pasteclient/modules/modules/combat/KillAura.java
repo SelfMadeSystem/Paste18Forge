@@ -108,6 +108,12 @@ public class KillAura extends PasteModule {
     @EventTarget
     private void onRender(Render3DEvent event) {
         if (!getState()) return;
+        if (mark.getValue() && lastTarget != null) render(lastTarget);
+    }
+
+    @EventTarget
+    private void onMouseMove(MouseMoveEvent event) {
+        if (!getState()) return;
         Entity target = null;
         double range = this.maxRange.getValue();
         double angle = this.maxAngle.getValue();
@@ -147,7 +153,6 @@ public class KillAura extends PasteModule {
             lastTarget = target;
         } else target = lastTarget;
         if (target != null) {
-            if (mark.getValue()) render(target);
             RotationUtil util = new RotationUtil(target, mh.yaw, mh.pitch);
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
@@ -179,7 +184,7 @@ public class KillAura extends PasteModule {
                     mh.yaw += aX;
                     mh.pitch += aY;
                     break;
-                case 3:
+                case 3: // todo: move this to right before mouse move. MouseMoveEvent or smth
                     rotation = RotationUtil.rotationDiff(rotation, mh.toRotation());
                     boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
                     mh.deltaX = (int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
@@ -225,6 +230,7 @@ public class KillAura extends PasteModule {
 
     @EventTarget
     private void onStrafe(StrafeEvent event) { // thx LB
+        if (!getState()) return;
         if (lastTarget != null && silent.getValue()) {
             switch (rotationStrafe.getValue()) {
                 case 1: {

@@ -3,7 +3,7 @@ package uwu.smsgamer.pasteclient.modules.modules.combat;
 import com.darkmagician6.eventapi.EventTarget;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
-import uwu.smsgamer.pasteclient.events.Render3DEvent;
+import uwu.smsgamer.pasteclient.events.*;
 import uwu.smsgamer.pasteclient.injection.interfaces.IMixinMouseHelper;
 import uwu.smsgamer.pasteclient.modules.*;
 import uwu.smsgamer.pasteclient.utils.*;
@@ -107,8 +107,16 @@ public class AimBot extends PasteModule {
         targetOrder.addChild(maxAngle = genInt("MaxAngle", "Maximum angle the entity has to be in degrees.", 180, 0, 180));
     }
 
+    public Entity lastTarget;
+
     @EventTarget
     private void onRender(Render3DEvent event) {
+        if (!getState()) return;
+        if (mark.getValue() && lastTarget != null) render(lastTarget);
+    }
+
+    @EventTarget
+    private void onMouseMove(MouseMoveEvent event) {
         if (!getState()) return;
         Entity target = null;
         double range = this.maxRange.getValue();
@@ -125,8 +133,8 @@ public class AimBot extends PasteModule {
                 target = TargetUtil.getLowestAngleEntity(range, angle);
                 break;
         }
+        lastTarget = target;
         if (target != null) {
-            if (mark.getValue()) render(target);
             RotationUtil util = new RotationUtil(target);
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
