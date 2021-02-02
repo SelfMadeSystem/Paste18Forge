@@ -16,9 +16,9 @@ import net.minecraft.network.Packet;
 
 public class PacketEvent extends EventCancellable {
     private final EventType eventType;
-    private Packet packet;
+    private Packet<?> packet;
 
-    public PacketEvent(EventType eventType, Packet packet) {
+    public PacketEvent(EventType eventType, Packet<?> packet) {
         this.eventType = eventType;
         this.packet = packet;
     }
@@ -27,11 +27,11 @@ public class PacketEvent extends EventCancellable {
         return eventType;
     }
 
-    public Packet getPacket() {
+    public Packet<?> getPacket() {
         return packet;
     }
 
-    public void setPacket(Packet packet) {
+    public void setPacket(Packet<?> packet) {
         this.packet = packet;
     }
 }

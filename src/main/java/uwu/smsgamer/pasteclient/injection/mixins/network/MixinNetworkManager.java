@@ -33,12 +33,27 @@ public abstract class MixinNetworkManager {
     public static AttributeKey<EnumConnectionState> attrKeyConnectionState;
     @Shadow
     private Channel channel;
+    @Shadow
+    private INetHandler packetListener;
 
-    @Inject(method = "channelRead0", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Packet;processPacket(Lnet/minecraft/network/INetHandler;)V", shift = At.Shift.BEFORE), cancellable = true)
-    private void packetReceived(ChannelHandlerContext p_channelRead0_1_, Packet<?> packet, CallbackInfo ci) {
+
+    /**
+     * @author Sms_Gamer_3808
+     */
+    @Overwrite
+    protected void channelRead0(ChannelHandlerContext p_channelRead0_1_, Packet packet) {
         PacketEvent event = new PacketEvent(EventType.RECIEVE, packet);
         EventManager.call(event);
-        if (event.isCancelled()) ci.cancel();
+        if (event.isCancelled()) {
+            return;
+        }
+        packet = event.getPacket();
+        if (this.channel.isOpen()) {
+            try {
+                packet.processPacket(this.packetListener);
+            } catch (ThreadQuickExitException ignored) {
+            }
+        }
     }
 
     @Shadow
@@ -49,11 +64,11 @@ public abstract class MixinNetworkManager {
      * @author Sms_Gamer_3808
      */
     @Overwrite
-    private void dispatchPacket(Packet<?> packet0, final GenericFutureListener<? extends Future<? super Void>>[] listeners) {
-        PacketEvent event = new PacketEvent(EventType.SEND, packet0);
+    private void dispatchPacket(Packet<?> packet, final GenericFutureListener<? extends Future<? super Void>>[] listeners) {
+        PacketEvent event = new PacketEvent(EventType.SEND, packet);
         EventManager.call(event);
         if (event.isCancelled()) return;
-        Packet<?> packet = event.getPacket();
+        packet = event.getPacket();
 
         final EnumConnectionState fromPacketState = EnumConnectionState.getFromPacket(packet);
         final EnumConnectionState packetAttr = this.channel.attr(attrKeyConnectionState).get();
@@ -74,12 +89,13 @@ public abstract class MixinNetworkManager {
 
             channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         } else {
+            Packet<?> finalPacket = packet;
             this.channel.eventLoop().execute(() -> {
-                if (fromPacketState != packetAttr && !(packet instanceof FMLProxyPacket)) {
+                if (fromPacketState != packetAttr && !(finalPacket instanceof FMLProxyPacket)) {
                     this.setConnectionState(fromPacketState);
                 }
 
-                ChannelFuture future = this.channel.writeAndFlush(packet);
+                ChannelFuture future = this.channel.writeAndFlush(finalPacket);
                 if (listeners != null) {
                     future.addListeners(listeners);
                 }

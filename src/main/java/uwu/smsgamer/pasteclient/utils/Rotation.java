@@ -2,6 +2,8 @@ package uwu.smsgamer.pasteclient.utils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.util.MathHelper;
+import uwu.smsgamer.pasteclient.events.StrafeEvent;
 
 public class Rotation {
     public final Double yaw;
@@ -27,7 +29,8 @@ public class Rotation {
     }
 
     public double getDiffS(Rotation rotation) {
-        return RotationUtil.angleDiff(rotation.yaw, yaw) + RotationUtil.angleDiff(rotation.pitch, pitch);
+        return Math.abs(RotationUtil.angleDiff(rotation.yaw, yaw)) +
+          Math.abs(RotationUtil.angleDiff(rotation.pitch, pitch));
     }
 
     public double playerYawDiff() {
@@ -57,85 +60,88 @@ public class Rotation {
         return length;
     }
 
-    public void applyStrafeToPlayer() { // If it's not obvious, this is from LB xD
-        /*val player = mc.thePlayer!!
+    public void applyStrafeToPlayer(StrafeEvent event) { // If it's not obvious, this is from LB xD
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 
-          val dif = ((WMathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
-          - 23.5f - 135)
-          + 180) / 45).toInt()
+        int dif = (int) ((MathHelper.wrapAngleTo180_double(player.rotationYaw - this.yaw - 23.5f - 135) + 180) / 45);
 
-        val yaw = this.yaw
+        float strafe = event.strafe;
+        float forward = event.forward;
+        float friction = event.friction;
 
-        val strafe = event.strafe
-        val forward = event.forward
-        val friction = event.friction
+        float calcForward = 0f;
+        float calcStrafe = 0f;
 
-        var calcForward = 0f
-        var calcStrafe = 0f
-
-        when (dif) {
-            0 -> {
-                calcForward = forward
-                calcStrafe = strafe
+        switch(dif) {
+            case 0: {
+                calcForward = forward;
+                calcStrafe = strafe;
+                break;
             }
-            1 -> {
-                calcForward += forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe += strafe
+            case 1: {
+                calcForward += forward;
+                calcStrafe -= forward;
+                calcForward += strafe;
+                calcStrafe += strafe;
+                break;
             }
-            2 -> {
-                calcForward = strafe
-                calcStrafe = -forward
+            case 2: {
+                calcForward = strafe;
+                calcStrafe = -forward;
+                break;
             }
-            3 -> {
-                calcForward -= forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe -= strafe
+            case 3: {
+                calcForward -= forward;
+                calcStrafe -= forward;
+                calcForward += strafe;
+                calcStrafe -= strafe;
+                break;
             }
-            4 -> {
-                calcForward = -forward
-                calcStrafe = -strafe
+            case 4: {
+                calcForward = -forward;
+                calcStrafe = -strafe;
+                break;
             }
-            5 -> {
-                calcForward -= forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe -= strafe
+            case 5: {
+                calcForward -= forward;
+                calcStrafe += forward;
+                calcForward -= strafe;
+                calcStrafe -= strafe;
+                break;
             }
-            6 -> {
-                calcForward = -strafe
-                calcStrafe = forward
+            case 6: {
+                calcForward = -strafe;
+                calcStrafe = forward;
+                break;
             }
-            7 -> {
-                calcForward += forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe += strafe
+            case 7: {
+                calcForward += forward;
+                calcStrafe += forward;
+                calcForward -= strafe;
+                calcStrafe += strafe;
             }
         }
 
         if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
-            calcForward *= 0.5f
+            calcForward *= 0.5f;
         }
 
         if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
-            calcStrafe *= 0.5f
+            calcStrafe *= 0.5f;
         }
 
-        var d = calcStrafe * calcStrafe + calcForward * calcForward
+        double d = calcStrafe * calcStrafe + calcForward * calcForward;
 
         if (d >= 1.0E-4f) {
-            d = sqrt(d)
-            if (d < 1.0f) d = 1.0f
-            d = friction / d
-            calcStrafe *= d
-            calcForward *= d
-            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
-            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
-        }*/
+            d = Math.sqrt(d);
+            if (d < 1.0f) d = 1.0f;
+            d = friction / d;
+            calcStrafe *= d;
+            calcForward *= d;
+            double yawSin = MathUtil.sin(yaw);
+            double yawCos = MathUtil.cos(yaw);
+            player.motionX += calcStrafe * yawCos - calcForward * yawSin;
+            player.motionZ += calcForward * yawCos + calcStrafe * yawSin;
+        }
     }
 }

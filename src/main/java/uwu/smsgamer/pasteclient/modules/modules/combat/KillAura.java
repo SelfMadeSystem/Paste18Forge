@@ -90,6 +90,8 @@ public class KillAura extends PasteModule {
 
     public CustomMouseHelper mh = new CustomMouseHelper();
     public Entity lastTarget;
+    public Rotation prevRotation;
+    public double angleDiff;
     public Rotation startAngle;
     public int switchCount;
 
@@ -102,6 +104,7 @@ public class KillAura extends PasteModule {
             mh.yaw = mc.thePlayer.rotationYaw;
             mh.pitch = mc.thePlayer.rotationPitch;
             startAngle = Rotation.player();
+            prevRotation = Rotation.player();
         }
     }
 
@@ -184,7 +187,7 @@ public class KillAura extends PasteModule {
                     mh.yaw += aX;
                     mh.pitch += aY;
                     break;
-                case 3: // todo: move this to right before mouse move. MouseMoveEvent or smth
+                case 3:
                     rotation = RotationUtil.rotationDiff(rotation, mh.toRotation());
                     boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
                     mh.deltaX = (int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
@@ -206,19 +209,40 @@ public class KillAura extends PasteModule {
             mh.yaw = mc.thePlayer.rotationYaw;
             mh.pitch = mc.thePlayer.rotationPitch;
         }
+        angleDiff = prevRotation.getDiffS(mh.toRotation());
+        if (angleDiff > 0.00000001) prevRotation = mh.toRotation();
     }
 
     @EventTarget
     private void onPacket(PacketEvent event) {
         if (!getState()) return;
+        if (!event.getEventType().equals(EventType.SEND)) return;
         Packet<?> packet = event.getPacket();
-        if (packet.getClass().equals(C03PacketPlayer.C05PacketPlayerLook.class)) {
-            event.setPacket(new C03PacketPlayer.C05PacketPlayerLook(mh.yaw, mh.pitch, ((C03PacketPlayer.C05PacketPlayerLook) packet).isOnGround()));
-        } else if (packet.getClass().equals(C03PacketPlayer.C06PacketPlayerPosLook.class)) {
-            event.setPacket(new C03PacketPlayer.C06PacketPlayerPosLook(((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionX(),
-              ((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionY(),
-              ((C03PacketPlayer.C06PacketPlayerPosLook) packet).getPositionZ(),
-              mh.yaw, mh.pitch, ((C03PacketPlayer.C06PacketPlayerPosLook) packet).isOnGround()));
+        if (packet.getClass().equals(C03PacketPlayer.C05PacketPlayerLook.class) ||
+          packet.getClass().equals(C03PacketPlayer.class)) {
+            if (angleDiff > 0.00000001) {
+                event.setPacket(new C03PacketPlayer.C05PacketPlayerLook(
+                  prevRotation.yaw.floatValue(), prevRotation.pitch.floatValue(),
+                  ((C03PacketPlayer) packet).isOnGround()));
+            } else {
+                event.setPacket(new C03PacketPlayer(((C03PacketPlayer) packet).isOnGround()));
+            }
+        } else if (packet.getClass().equals(C03PacketPlayer.C06PacketPlayerPosLook.class) ||
+          packet.getClass().equals(C03PacketPlayer.C04PacketPlayerPosition.class)) {
+            if (angleDiff > 0.00000001) {
+                event.setPacket(new C03PacketPlayer.C06PacketPlayerPosLook(
+                  ((C03PacketPlayer) packet).getPositionX(),
+                  ((C03PacketPlayer) packet).getPositionY(),
+                  ((C03PacketPlayer) packet).getPositionZ(),
+                  prevRotation.yaw.floatValue(), prevRotation.pitch.floatValue(),
+                  ((C03PacketPlayer) packet).isOnGround()));
+            } else {
+                event.setPacket(new C03PacketPlayer.C04PacketPlayerPosition(
+                  ((C03PacketPlayer) packet).getPositionX(),
+                  ((C03PacketPlayer) packet).getPositionY(),
+                  ((C03PacketPlayer) packet).getPositionZ(),
+                  ((C03PacketPlayer) packet).isOnGround()));
+            }
         }
     }
 
@@ -250,8 +274,8 @@ public class KillAura extends PasteModule {
                         strafe *= f;
                         forward *= f;
 
-                        double yawSin = MathUtil.sin(mh.yaw * Math.PI / 180F);
-                        double yawCos = MathUtil.cos(mh.yaw * Math.PI / 180F);
+                        double yawSin = MathUtil.sin(mh.yaw);
+                        double yawCos = MathUtil.cos(mh.yaw);
 
                         mc.thePlayer.motionX += strafe * yawCos - forward * yawSin;
                         mc.thePlayer.motionZ += forward * yawCos + strafe * yawSin;
@@ -260,7 +284,7 @@ public class KillAura extends PasteModule {
                     break;
                 }
                 case 2: {
-                    new Rotation(mh.yaw, mh.pitch).applyStrafeToPlayer();
+                    mh.toRotation().applyStrafeToPlayer(event);
                     event.setCancelled(true);
                 }
             }
@@ -304,54 +328,21 @@ public class KillAura extends PasteModule {
     }
 
     private void clickMouse(MovingObjectPosition objectMouseOver) {
-        Field lcc = null;
-        try {
-            lcc = mc.getClass().getDeclaredField("leftClickCounter");
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        int leftClickCounter = 0;
-        if (lcc != null) {
-            try {
-                lcc.setAccessible(true);
-                leftClickCounter = (int) lcc.get(mc);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (leftClickCounter <= 0) {
-            mc.thePlayer.swingItem();
-            if (objectMouseOver == null) {
-                LogManager.getLogger().error("Null returned as 'hitResult', this shouldn't happen!");
-                if (mc.playerController.isNotCreative()) {
-                    leftClickCounter = 10;
-                }
-            } else {
-                switch (objectMouseOver.typeOfHit) {
-                    case ENTITY:
-                        if (targetMode.getValue() == 2) switchCount++;
-                        mc.playerController.attackEntity(mc.thePlayer, objectMouseOver.entityHit);
+        mc.thePlayer.swingItem();
+        if (objectMouseOver == null) {
+            LogManager.getLogger().error("Null returned as 'hitResult', this shouldn't happen!");
+        } else {
+            switch (objectMouseOver.typeOfHit) {
+                case ENTITY:
+                    if (targetMode.getValue() == 2) switchCount++;
+                    mc.playerController.attackEntity(mc.thePlayer, objectMouseOver.entityHit);
+                    break;
+                case BLOCK:
+                    BlockPos blockpos = objectMouseOver.getBlockPos();
+                    if (mc.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air) {
+                        mc.playerController.clickBlock(blockpos, objectMouseOver.sideHit);
                         break;
-                    case BLOCK:
-                        BlockPos blockpos = objectMouseOver.getBlockPos();
-                        if (mc.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air) {
-                            mc.playerController.clickBlock(blockpos, objectMouseOver.sideHit);
-                            break;
-                        }
-                    case MISS:
-                    default:
-                        if (mc.playerController.isNotCreative()) {
-                            leftClickCounter = 10;
-                        }
-                }
-            }
-        }
-        if (lcc != null) {
-            try {
-                lcc.set(mc, leftClickCounter);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                    }
             }
         }
     }

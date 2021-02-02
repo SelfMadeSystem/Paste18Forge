@@ -134,8 +134,9 @@ public class AimAssist extends PasteModule {
 
     @EventTarget
     private void onRender(Render3DEvent event) {
+        if (!getState()) return;
         if (!mark.getValue()) return;
-        render(lastTarget);
+        if (lastTarget != null) render(lastTarget);
     }
 
     private void render(Entity entity) {
