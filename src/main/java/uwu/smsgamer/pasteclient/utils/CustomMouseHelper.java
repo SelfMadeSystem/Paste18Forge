@@ -6,12 +6,14 @@ import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.MathHelper;
 
 public class CustomMouseHelper {
+    public double mult = 0.15D;
     public int deltaX, deltaY;
     public float sensitivity;
     public float yaw, pitch;
     public float prevYaw, prevPitch;
 
     public void reinitialize(){
+        mult = 0.15D;
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         yaw = player.rotationYaw;
         pitch = player.rotationPitch;
@@ -34,8 +36,8 @@ public class CustomMouseHelper {
     {
         float f = this.pitch;
         float f1 = this.yaw;
-        this.yaw = (float)(this.yaw + yaw * 0.15D);
-        this.pitch = (float)(this.pitch - pitch * 0.15D);
+        this.yaw = (float)(this.yaw + yaw * mult);
+        this.pitch = (float)(this.pitch - pitch * mult);
         this.pitch = MathHelper.clamp_float(this.pitch, -90.0F, 90.0F);
         this.prevPitch += this.pitch - f;
         this.prevYaw += this.yaw - f1;

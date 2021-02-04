@@ -161,6 +161,7 @@ public class KillAura extends PasteModule {
                 AIMBOTMOUSEMOVETHINGYFUCKMYLIFE(event);
                 break CASE;
             }
+            mh.mult = 1;
             RotationUtil util = new RotationUtil(target, mh.yaw, mh.pitch);
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
@@ -219,6 +220,7 @@ public class KillAura extends PasteModule {
     }
 
     private void AIMBOTMOUSEMOVETHINGYFUCKMYLIFE(MouseMoveEvent event) {
+        mh.mult = 0.15D;
         if (!getState()) return;
         Entity target = lastTarget;
         double aimLimit = this.aimLimit.getValue() + (Math.random() * aimLimitVary.getValue() - aimLimitVary.getValue() / 2);
