@@ -304,6 +304,7 @@ public class KillAura extends PasteModule {
                 float rP = mc.thePlayer.rotationPitch;
                 float pRY = mc.thePlayer.prevRotationYaw;
                 float pRP = mc.thePlayer.prevRotationPitch;
+
                 mc.thePlayer.rotationYaw = mh.yaw;
                 mc.thePlayer.rotationPitch = mh.pitch;
                 mc.thePlayer.prevRotationYaw = mh.prevYaw;
@@ -322,7 +323,7 @@ public class KillAura extends PasteModule {
                 }*/
             }
             nextAttack = (int) hitTickDelay.getRandomBias(hitDelayBias.getRandomValue(), hitDelayInfluence.getRandomValue());
-            ChatUtils.send(String.format("%s", nextAttack));
+            // ChatUtils.send(String.format("%s %s", mc.thePlayer.rotationYaw, mc.thePlayer.cameraYaw));
         }
     }
 

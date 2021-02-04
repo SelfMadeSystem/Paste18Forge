@@ -21,17 +21,16 @@ public class RaycastUtils {
         Entity pointedEntity;
         if (viewEntity != null && mc.theWorld != null) {
             mc.mcProfiler.startSection("pick");
-            mc.pointedEntity = null;
-            double d0 = mc.playerController.getBlockReachDistance();
+            // mc.pointedEntity = null;
+            double d0 = bReach;//mc.playerController.getBlockReachDistance();
             objectMouseOver = viewEntity.rayTrace(d0, partialTicks);
             double d1 = d0;
             Vec3 vec3 = viewEntity.getPositionEyes(partialTicks);
             boolean flag = false;
-            int i = 1;
             if (mc.playerController.extendedReach()) {
-                d0 = 6.0D;
-                d1 = 6.0D;
-            } else if (d0 > 3.0D) {
+                d0 = eReach * 2;
+                d1 = eReach * 2;
+            } else if (d0 > eReach) {
                 flag = true;
             }
 
@@ -78,16 +77,16 @@ public class RaycastUtils {
                 }
             }
 
-            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > 3.0D) {
+            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > eReach) {
                 pointedEntity = null;
                 objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec33, null, new BlockPos(vec33));
             }
 
             if (pointedEntity != null && (d2 < d1 || objectMouseOver == null)) {
                 objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
-                if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame) {
-                    mc.pointedEntity = pointedEntity;
-                }
+//                if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame) {
+//                    mc.pointedEntity = pointedEntity;
+//                }
             }
 
             mc.mcProfiler.endSection();
