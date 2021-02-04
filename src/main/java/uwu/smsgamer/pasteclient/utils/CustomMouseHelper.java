@@ -34,8 +34,8 @@ public class CustomMouseHelper {
     {
         float f = this.pitch;
         float f1 = this.yaw;
-        this.yaw = (float)(this.yaw + yaw);// * 0.15D);
-        this.pitch = (float)(this.pitch - pitch);// * 0.15D);
+        this.yaw = (float)(this.yaw + yaw * 0.15D);
+        this.pitch = (float)(this.pitch - pitch * 0.15D);
         this.pitch = MathHelper.clamp_float(this.pitch, -90.0F, 90.0F);
         this.prevPitch += this.pitch - f;
         this.prevYaw += this.yaw - f1;

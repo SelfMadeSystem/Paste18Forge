@@ -31,7 +31,8 @@ public class KillAura extends PasteModule {
       0, "Normal",
       1, "GCD Patch",
       2, "To MouseHelper Pixels",
-      3, "Emulate MouseHelper");
+      3, "Emulate MouseHelper",
+      4, "AimBot");
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -155,7 +156,11 @@ public class KillAura extends PasteModule {
             }
             lastTarget = target;
         } else target = lastTarget;
-        if (target != null) {
+        CASE: if (target != null) {
+            if (aimMode.getValue() == 4) {
+                AIMBOTMOUSEMOVETHINGYFUCKMYLIFE(event);
+                break CASE;
+            }
             RotationUtil util = new RotationUtil(target, mh.yaw, mh.pitch);
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
@@ -211,6 +216,28 @@ public class KillAura extends PasteModule {
         }
         angleDiff = prevRotation.getDiffS(mh.toRotation());
         if (angleDiff > 0.00000001) prevRotation = mh.toRotation();
+    }
+
+    private void AIMBOTMOUSEMOVETHINGYFUCKMYLIFE(MouseMoveEvent event) {
+        if (!getState()) return;
+        Entity target = lastTarget;
+        double aimLimit = this.aimLimit.getValue() + (Math.random() * aimLimitVary.getValue() - aimLimitVary.getValue() / 2);
+        lastTarget = target;
+
+        RotationUtil util = new RotationUtil(target);
+        boolean setY = aimWhere.getValue() != 0;
+        double sY = getYPos();
+
+        Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue());
+        rotation = RotationUtil.rotationDiff(rotation, Rotation.player());
+        boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
+        mh.deltaX = ((int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
+          (!moving ? 0 : (aimRandomYaw.getValue() * 2 * Math.random() - aimRandomYaw.getValue()))));
+        mh.deltaY = ((int) (Math.min(aimLimit,
+          Math.max(-aimLimit, rotation.pitchToMouse())) * (mc.gameSettings.invertMouse ? 1 : -1) +
+          (!moving ? 0 : (aimRandomPitch.getValue() * 2 * Math.random() - aimRandomPitch.getValue()))));
+        mh.rotate();
+        if (!silent.getValue()) mh.toPlayer();
     }
 
     @EventTarget
