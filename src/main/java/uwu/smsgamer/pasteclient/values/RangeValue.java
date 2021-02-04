@@ -122,6 +122,14 @@ public class RangeValue extends Value<Pair<Double, Double>> {
         }
     }
 
+    public void setProperly() {
+        if (value.a > value.b) {
+            double c = value.a;
+            value.a = value.b;
+            value.b = c;
+        }
+    }
+
     public boolean getClosest(double val) {
         return Math.abs(getMinScaled() - val) > Math.abs(getMaxScaled() - val);
     }

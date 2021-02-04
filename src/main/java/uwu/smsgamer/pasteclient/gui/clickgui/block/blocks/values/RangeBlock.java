@@ -80,6 +80,7 @@ public class RangeBlock extends ValueBlock {
             }
             if (closest) value.setMaxScaled(d);
             else value.setMinScaled(d);
+            value.setProperly();
         }
     }
 }
