@@ -4,7 +4,7 @@ import com.google.gson.*;
 import uwu.smsgamer.pasteclient.command.CommandException;
 import uwu.smsgamer.pasteclient.utils.*;
 
-public class RangeValue extends Value<Pair<Double, Double>> { // FIXME: 2020-11-30 FIX ME!!!!!!!!!!!!! I'm broken!!!!!!!
+public class RangeValue extends Value<Pair<Double, Double>> {
     protected Double min;
     protected Double max;
     protected Double step;
@@ -25,6 +25,14 @@ public class RangeValue extends Value<Pair<Double, Double>> { // FIXME: 2020-11-
 
     public Double getMax() {
         return max;
+    }
+
+    public Double getMinValue() {
+        return value.a;
+    }
+
+    public Double getMaxValue() {
+        return value.b;
     }
 
     public Double getStep() {
@@ -112,6 +120,10 @@ public class RangeValue extends Value<Pair<Double, Double>> { // FIXME: 2020-11-
             value.a = value.b;
             value.b = c;
         }
+    }
+
+    public boolean getClosest(double val) {
+        return Math.abs(getMinScaled() - val) > Math.abs(getMaxScaled() - val);
     }
 
     public double getRandomValue() {

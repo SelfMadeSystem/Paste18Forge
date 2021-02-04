@@ -53,6 +53,8 @@ public class RangeBlock extends ValueBlock {
         setDescription(mouseX, mouseY);
     }
 
+    boolean closest;
+
     @Override
     public int getHeight() {
         return (int) (HEIGHT.getValue() * 1.25);
@@ -61,9 +63,23 @@ public class RangeBlock extends ValueBlock {
     @Override
     public void click(int mouseX, int mouseY, int mouseButton, int pressType) {
         super.click(mouseX, mouseY, mouseButton, pressType);
-        if (mouseButton == 0 && pressType == 0 && canSelect() && isHovering(mouseX, mouseY)) setSelected();
+        if (mouseButton == 0 && pressType == 0 && canSelect() && isHovering(mouseX, mouseY)) {
+            setSelected();
+            closest = value.getClosest(Math.max(0, Math.min(1, (mouseX * 2 - lastX + getWidth() / 2D) / getWidth())));
+        }
         if (mouseButton == 0 && pressType == 2) setUnselected();
-        if (isSelected())
-            value.setClosestScaled(Math.max(0, Math.min(1, (mouseX * 2 - lastX + getWidth() / 2D) / getWidth())));
+        if (isSelected()) {
+            double d = Math.max(0, Math.min(1, (mouseX * 2 - lastX + getWidth() / 2D) / getWidth()));
+            if ((closest && value.getMinScaled() < d) ||
+              (!closest && value.getMaxScaled() > d)) {
+                closest = !closest;
+                double a = value.getMaxValue();
+                double b = value.getMinValue();
+                value.setMax(b);
+                value.setMin(a);
+            }
+            if (closest) value.setMaxScaled(d);
+            else value.setMinScaled(d);
+        }
     }
 }
