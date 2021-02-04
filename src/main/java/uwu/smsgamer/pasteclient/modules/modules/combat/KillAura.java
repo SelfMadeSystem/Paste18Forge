@@ -246,6 +246,7 @@ public class KillAura extends PasteModule {
     private void onPacket(PacketEvent event) {
         if (!getState()) return;
         if (!event.getEventType().equals(EventType.SEND)) return;
+        if (!silent.getValue()) return;
         Packet<?> packet = event.getPacket();
         if (packet.getClass().equals(C03PacketPlayer.C05PacketPlayerLook.class) ||
           packet.getClass().equals(C03PacketPlayer.class)) {
