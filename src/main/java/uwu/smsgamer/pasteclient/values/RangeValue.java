@@ -60,7 +60,7 @@ public class RangeValue extends Value<Pair<Double, Double>> {
     public boolean setCommandValue(String arg) {
         String[] split = arg.split(":");
         if (split.length != 2)
-            throw new CommandException("Invalid format. Format expected: " + ChatUtils.SECONDARY_COLOR +"min:max");
+            throw new CommandException("Invalid format. Format expected: " + ChatUtils.SECONDARY_COLOR + "min:max");
         String at = split[0];
         double min;
         double max;
@@ -136,6 +136,14 @@ public class RangeValue extends Value<Pair<Double, Double>> {
 
     public double getRandomValue() {
         return Math.random() * Math.abs(this.value.a - this.value.b) + Math.min(this.value.a, this.value.b);
+    }
+
+    public double getRandomBias(double bias, double influence) {
+        double min = this.value.a;
+        double max = this.value.b;
+        double rnd = Math.random() * (max - min) + min,   // random in range
+          mix = Math.random() * influence;                // random mixer
+        return rnd * (1 - mix) + bias * mix;              // mix full range and bias
     }
 
     public double getTimedValue(int speed) {

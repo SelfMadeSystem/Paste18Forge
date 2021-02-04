@@ -15,7 +15,6 @@ import uwu.smsgamer.pasteclient.utils.*;
 import uwu.smsgamer.pasteclient.values.*;
 
 import java.awt.*;
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class KillAura extends PasteModule {
@@ -78,8 +77,9 @@ public class KillAura extends PasteModule {
     });
     public NumberValue maxRange;
     public NumberValue maxAngle;
-    public NumberValue minCPS = (NumberValue) addValue(new NumberValue("MinCPS", "Minimum CPS.", 9, 0, 20, 1, NumberValue.NumberType.INTEGER));
-    public NumberValue maxCPS = (NumberValue) addValue(new NumberValue("MaxCPS", "Maximum CPS.", 13, 0, 20, 1, NumberValue.NumberType.INTEGER));
+    public RangeValue hitTickDelay = (RangeValue) addValue(new RangeValue("HitTickDelay", "Delay for hitting in ticks.", 1, 3, 1, 20, 1, NumberValue.NumberType.INTEGER));
+    public RangeValue hitDelayBias = (RangeValue) addValue(new RangeValue("HitDelayBias", "Bias for the tick delay.", 0, 0.3, 0, 1, 0.001, NumberValue.NumberType.PERCENT));
+    public RangeValue hitDelayInfluence = (RangeValue) addValue(new RangeValue("HitDelayInfl", "Influence for the bias of the tick delay.", 0.5, 1, 0, 1, 0.001, NumberValue.NumberType.PERCENT));
     public NumberValue reach = (NumberValue) addValue(new NumberValue("Reach", "Reach for hitting entity.", 3, 0, 8, 0.025, NumberValue.NumberType.DECIMAL));
 
     public KillAura() {
@@ -321,9 +321,8 @@ public class KillAura extends PasteModule {
                     mc.playerController.clickBlock(result.getBlockPos(), result.sideHit);
                 }*/
             }
-            double min = minCPS.getValue();
-            double max = maxCPS.getValue();
-            nextAttack = (int) (Math.random() * (max - min) + min);
+            nextAttack = (int) hitTickDelay.getRandomBias(hitDelayBias.getRandomValue(), hitDelayInfluence.getRandomValue());
+            ChatUtils.send(String.format("%s", nextAttack));
         }
     }
 
