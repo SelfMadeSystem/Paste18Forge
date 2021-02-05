@@ -75,4 +75,14 @@ public class MixinEntityPlayerSP extends AbstractClientPlayer {
     private void onUpdatePost(CallbackInfo ci) {
         EventManager.call(new UpdateEvent(EventType.POST));
     }
+
+    @Inject(method = "swingItem", at = @At("HEAD"))
+    private void preSwingItem(CallbackInfo ci) {
+        EventManager.call(new SwingArmEvent(EventType.PRE));
+    }
+
+    @Inject(method = "swingItem", at = @At("RETURN"))
+    private void postSwingItem(CallbackInfo ci) {
+        EventManager.call(new SwingArmEvent(EventType.POST));
+    }
 }

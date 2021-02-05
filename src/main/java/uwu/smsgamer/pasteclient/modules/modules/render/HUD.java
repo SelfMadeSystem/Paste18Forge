@@ -11,6 +11,7 @@
 package uwu.smsgamer.pasteclient.modules.modules.render;
 
 import com.darkmagician6.eventapi.EventTarget;
+import com.darkmagician6.eventapi.types.EventType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +21,10 @@ import uwu.smsgamer.pasteclient.PasteClient;
 import uwu.smsgamer.pasteclient.events.*;
 import uwu.smsgamer.pasteclient.gui.tabgui.*;
 import uwu.smsgamer.pasteclient.modules.*;
+import uwu.smsgamer.pasteclient.modules.modules.render.hud.*;
 import uwu.smsgamer.pasteclient.notifications.NotificationManager;
 import uwu.smsgamer.pasteclient.utils.GLUtil;
-import uwu.smsgamer.pasteclient.values.NumberValue;
+import uwu.smsgamer.pasteclient.values.*;
 
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -33,12 +35,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class HUD extends PasteModule {
     @NotNull
-    private TabGui<PasteModule> tabGui = new TabGui<>();
+    private final TabGui<PasteModule> tabGui = new TabGui<>();
     @NotNull
-    private List<Integer> fps = new ArrayList<>();
+    private final List<Integer> fps = new ArrayList<>();
+    public final List<Long> cps = new ArrayList<>();
+    public final double accuracy = 0;
+    public final double lastRange = 0;
 
     @NotNull
-    private NumberValue fpsStatisticLength = addInt("FPSStatisticLength", "idk", 250D, 10D, 500D);
+    public final NumberValue fpsStatisticLength = addInt("FPSStatisticLength", "idk", 250D, 10D, 500D);
+    public final BoolValue eTabGUI = addBool("TabGui", "Enable tab gui", true);
+    public final BoolValue eStatFPS = addBool("StatFPS", "Enable stat frames per second", true);
+    public final BoolValue eStatBPS = addBool("StatBPS", "Enable stat blocks per second", true);
+    public final BoolValue eStatCPS = addBool("StatCPS", "Enable stat blocks per second", false);
+    public final BoolValue eStatAAc = addBool("StatAA", "Enable stat aim accuracy", false);
+    public final BoolValue eStatRan = addBool("StatRange", "Enable stat hit range", false);
+
+    private final HudStat[] stats = new HudStat[]{
+      new FPSStat(),
+      new BPSStat(),
+      new CPSStat(),
+      new RanStat(),
+      new AAStat()
+    };
 
     private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -77,6 +96,11 @@ public class HUD extends PasteModule {
     }
 
     @EventTarget
+    private void onUpdate(UpdateEvent event) {
+
+    }
+
+    @EventTarget
     private void render2D(Render2DEvent event) {
         if (!getState()) return;
 
@@ -84,6 +108,8 @@ public class HUD extends PasteModule {
         while (fps.size() > fpsStatisticLength.getInt()) {
             fps.remove(0);
         }
+
+        while (!cps.isEmpty() && cps.get(0) < System.currentTimeMillis() - 1000) cps.remove(0);
 
         FontRenderer fontRenderer = mc.fontRendererObj;
 
@@ -101,10 +127,26 @@ public class HUD extends PasteModule {
         fontRenderer.drawString(PasteClient.CLIENT_VERSION, i * 2, fontRenderer.FONT_HEIGHT * 2 - 7, rainbow(100), true);
         fontRenderer.drawString("by " + PasteClient.CLIENT_AUTHOR, 4, fontRenderer.FONT_HEIGHT * 2 + 2, rainbow(200), true);
 
-        double currSpeed = Math.sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ);
+        int maxWidth = initialSize * 2 - 6;
+        int lastWidth = 0;
 
-        int fpsWidth = fontRenderer.drawString("FPS: " + Minecraft.getDebugFPS(), initialSize * 2 + 2, res.getScaledHeight() - fontRenderer.FONT_HEIGHT - 2, -1, true);
-        fpsWidth = Math.max(fpsWidth, fontRenderer.drawString(String.format("BPS: %.2f", currSpeed), initialSize * 2 + 2, res.getScaledHeight() - fontRenderer.FONT_HEIGHT * 2 - 2, -1, true));
+        boolean down = false;
+
+        for (HudStat stat : stats) {
+            if (!stat.render(this)) return;
+            if (down = !down)
+                lastWidth = fontRenderer.drawString(stat.getStatString(this), maxWidth + 8, res.getScaledHeight() - fontRenderer.FONT_HEIGHT * 2 - 2, -1, true);
+            else {
+                int width = fontRenderer.drawString(stat.getStatString(this), maxWidth + 8, res.getScaledHeight() - fontRenderer.FONT_HEIGHT - 2, -1, true);
+                maxWidth += Math.max(width, lastWidth) - maxWidth;
+                lastWidth = 0;
+            }
+        }
+
+        if (lastWidth != 0) maxWidth += lastWidth - maxWidth;
+
+//        fontRenderer.drawString("FPS: " + Minecraft.getDebugFPS(), initialSize * 2 + 2, res.getScaledHeight() - fontRenderer.FONT_HEIGHT - 2, -1, true);
+//        maxWidth = Math.max(maxWidth, fontRenderer.drawString(String.format("BPS: %.2f", currSpeed), initialSize * 2 + 2, res.getScaledHeight() - fontRenderer.FONT_HEIGHT * 2 - 2, -1, true));
 
 
         LocalDateTime now = LocalDateTime.now();
@@ -127,7 +169,7 @@ public class HUD extends PasteModule {
         });
 
         NotificationManager.render();
-        tabGui.render(5, (2 + fontRenderer.FONT_HEIGHT) * 3);
+        if (eTabGUI.getValue()) tabGui.render(5, (2 + fontRenderer.FONT_HEIGHT) * 3);
 
 
         int max = fps.stream().max(Integer::compareTo).orElse(1);
@@ -141,14 +183,14 @@ public class HUD extends PasteModule {
 
         GL11.glBegin(GL11.GL_LINE_STRIP);
 
-        fpsWidth += 3;
+        maxWidth += 3;
 
-        double v = ((res.getScaledWidth() / 2.0 - 100) - fpsWidth) / (double) fps.size();
+        double v = ((res.getScaledWidth() / 2.0 - 100) - maxWidth) / (double) fps.size();
 
         for (int j = 0; j < fps.size(); j++) {
             int currFPS = fps.get(j);
 
-            GL11.glVertex2d(fpsWidth + j * v, res.getScaledHeight() - transform * currFPS);
+            GL11.glVertex2d(maxWidth + j * v, res.getScaledHeight() - transform * currFPS);
         }
 
         GL11.glEnd();
@@ -158,6 +200,13 @@ public class HUD extends PasteModule {
 
     @EventTarget
     public void onKey(@NotNull KeyEvent event) {
-        tabGui.handleKey(event.getKey());
+        if (eTabGUI.getValue()) tabGui.handleKey(event.getKey());
+    }
+
+    @EventTarget
+    public void onSwing(SwingArmEvent event) {
+        if (event.getEventType().equals(EventType.PRE)) {
+            cps.add(System.currentTimeMillis());
+        }
     }
 }
