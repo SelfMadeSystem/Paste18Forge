@@ -70,6 +70,7 @@ public class KillAura extends PasteModule {
     });
     public BoolValue mark = addBool("Mark", "Whether to mark where you're aiming at.", true);
     public BoolValue justHit = addBool("JustHit", "Just hit the entity and don't fuck around w/ raycast bs.", false);
+    public BoolValue dontHitBlock = addBool("DontHitBlock", "Don't hit block (can flag antishits).", false);
     public FancyColorValue color = (FancyColorValue) addValue(new FancyColorValue("Mark Color", "Color for the marker.", new Color(0, 255, 0, 64)) {
         @Override
         public boolean isVisible() {
@@ -107,6 +108,12 @@ public class KillAura extends PasteModule {
             startAngle = Rotation.player();
             prevRotation = Rotation.player();
         }
+    }
+
+    @Override
+    protected void onDisable() {
+        ((IMixinMouseHelper) mc.mouseHelper).reset();
+        lastTarget = null;
     }
 
     @EventTarget
@@ -368,6 +375,7 @@ public class KillAura extends PasteModule {
                     mc.playerController.attackEntity(mc.thePlayer, objectMouseOver.entityHit);
                     break;
                 case BLOCK:
+                    if (dontHitBlock.getValue()) return;
                     BlockPos blockpos = objectMouseOver.getBlockPos();
                     if (mc.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air) {
                         mc.playerController.clickBlock(blockpos, objectMouseOver.sideHit);
@@ -375,11 +383,6 @@ public class KillAura extends PasteModule {
                     }
             }
         }
-    }
-
-    @Override
-    protected void onDisable() {
-        ((IMixinMouseHelper) mc.mouseHelper).reset();
     }
 
     public double getYPos() {
