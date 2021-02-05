@@ -17,19 +17,22 @@ import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.util.*;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.lwjgl.opengl.Display;
+import org.spongepowered.asm.mixin.*;
 import uwu.smsgamer.pasteclient.PasteClient;
 import uwu.smsgamer.pasteclient.events.KeyEvent;
 import uwu.smsgamer.pasteclient.injection.interfaces.IMixinMinecraft;
 import uwu.smsgamer.pasteclient.modules.modules.fun.DemoModeModule;
 import org.lwjgl.input.Keyboard;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.io.*;
+import java.nio.ByteBuffer;
 
 @Mixin(Minecraft.class)
 @SideOnly(Side.CLIENT)
@@ -43,6 +46,11 @@ public class MixinMinecraft implements IMixinMinecraft {
     @Mutable
     @Final
     private Session session;
+
+    @Shadow
+    private ByteBuffer readImageToBuffer(InputStream p_readImageToBuffer_1_) {
+        return null;
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void minecraftConstructor(GameConfiguration gameConfig, CallbackInfo ci) {
@@ -78,6 +86,29 @@ public class MixinMinecraft implements IMixinMinecraft {
         }
     }
 
+    /**
+     * @author Sms_Gamer_3808
+     */
+    @Overwrite
+    private void setWindowIcon() {
+        Util.EnumOS util$enumos = Util.getOSType();
+        LogManager.getLogger().info("Setting icon!");
+        if (util$enumos != Util.EnumOS.OSX) {
+            InputStream image16 = null;
+            InputStream image32 = null;
+
+            try {
+                image16 = getClass().getResourceAsStream("/assets/PasteForgeICO-16.png");
+                image32 = getClass().getResourceAsStream("/assets/PasteForgeICO-32.png");
+                if (image16 != null && image32 != null) {
+                    Display.setIcon(new ByteBuffer[]{this.readImageToBuffer(image16), this.readImageToBuffer(image32)});
+                }
+            } finally {
+                IOUtils.closeQuietly(image16);
+                IOUtils.closeQuietly(image32);
+            }
+        }
+    }
 
     @Override
     public Session getSession() {

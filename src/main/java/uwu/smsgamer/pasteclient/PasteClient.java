@@ -10,7 +10,6 @@
 
 package uwu.smsgamer.pasteclient;
 
-//import net.arikia.dev.drpc.DiscordRPC;
 import net.arikia.dev.drpc.DiscordRPC;
 import org.jetbrains.annotations.NotNull;
 import uwu.smsgamer.pasteclient.command.CommandManager;
@@ -54,7 +53,7 @@ public class PasteClient {
 
     public ModuleManager moduleManager;
     public CommandManager commandManager;
-//    public ValueManager valueManager;
+    //    public ValueManager valueManager;
     private FileManager fileManager;
 //    public ScriptManager scriptManager;
 
