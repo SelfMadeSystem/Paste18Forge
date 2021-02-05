@@ -32,7 +32,7 @@ public class KillAura extends PasteModule {
       1, "GCD Patch",
       2, "To MouseHelper Pixels",
       3, "Emulate MouseHelper",
-      4, "AimBot");
+      4, "AimBot"); // Todo: Meow
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -53,7 +53,7 @@ public class KillAura extends PasteModule {
             return aimWhere.getValue() == 6;
         }
     });
-    public RangeValue hLimit = (RangeValue) addValue(new RangeValue("HLimit", "Horizontal limit on entity for aiming.", 1, 1, 0, 1, 0.01, NumberValue.NumberType.PERCENT));
+    public RangeValue hLimit = (RangeValue) addValue(new RangeValue("HLimit", "Horizontal limit on entity for aiming.", 1, 1, 0, 3, 0.01, NumberValue.NumberType.PERCENT));
     public NumberValue aimLimit = (NumberValue) addValue(new NumberValue("AimLimit", "Limits your aim in degrees.", 90, 0, 90, 1, NumberValue.NumberType.INTEGER));
     public NumberValue aimLimitVary = (NumberValue) addValue(new NumberValue("AimLimitVary", "Varies the limit of your aim in degrees.", 5, 0, 15, 0.5, NumberValue.NumberType.DECIMAL));
     public NumberValue aimRandomYaw = (NumberValue) addValue(new NumberValue("AimRandomYaw", "Randomizes your yaw in degrees.", 2, 0, 15, 0.1, NumberValue.NumberType.DECIMAL));
@@ -327,8 +327,8 @@ public class KillAura extends PasteModule {
         if (nextAttack-- <= 0 && lastTarget != null) {
             if (justHit.getValue()) {
                 if (targetMode.getValue() == 2) switchCount++;
-                mc.playerController.attackEntity(mc.thePlayer, lastTarget);
                 mc.thePlayer.swingItem();
+                mc.playerController.attackEntity(mc.thePlayer, lastTarget);
             } else {
                 float rY = mc.thePlayer.rotationYaw;
                 float rP = mc.thePlayer.rotationPitch;
