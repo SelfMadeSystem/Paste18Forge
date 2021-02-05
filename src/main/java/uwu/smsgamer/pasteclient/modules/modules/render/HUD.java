@@ -23,7 +23,7 @@ import uwu.smsgamer.pasteclient.gui.tabgui.*;
 import uwu.smsgamer.pasteclient.modules.*;
 import uwu.smsgamer.pasteclient.modules.modules.render.hud.*;
 import uwu.smsgamer.pasteclient.notifications.NotificationManager;
-import uwu.smsgamer.pasteclient.utils.GLUtil;
+import uwu.smsgamer.pasteclient.utils.*;
 import uwu.smsgamer.pasteclient.values.*;
 
 import java.awt.*;
@@ -39,8 +39,8 @@ public class HUD extends PasteModule {
     @NotNull
     private final List<Integer> fps = new ArrayList<>();
     public final List<Long> cps = new ArrayList<>();
-    public final double accuracy = 0;
-    public final double lastRange = 0;
+    public double aimAcc = 0;
+    public double lastRange = 0;
 
     @NotNull
     public final NumberValue fpsStatisticLength = addInt("FPSStatisticLength", "idk", 250D, 10D, 500D);
@@ -49,6 +49,7 @@ public class HUD extends PasteModule {
     public final BoolValue eStatBPS = addBool("StatBPS", "Enable stat blocks per second", true);
     public final BoolValue eStatCPS = addBool("StatCPS", "Enable stat blocks per second", false);
     public final BoolValue eStatAAc = addBool("StatAA", "Enable stat aim accuracy", false);
+    public final NumberValue aAcSpeed = addInt("AASpeed", "Speed of increase/decrease", 20, 1, 100);
     public final BoolValue eStatRan = addBool("StatRange", "Enable stat hit range", false);
 
     private final HudStat[] stats = new HudStat[]{
@@ -97,7 +98,12 @@ public class HUD extends PasteModule {
 
     @EventTarget
     private void onUpdate(UpdateEvent event) {
-
+        if (!getState()) return;
+        if (RaycastUtils.getObjectMouseOver(0, Minecraft.getMinecraft().getRenderViewEntity(),
+          14, 14).entityHit != null) {
+            aimAcc += aAcSpeed.getInt() * 0.0025;
+        } else aimAcc -= aAcSpeed.getInt() * 0.0025;
+        aimAcc = Math.max(0, Math.min(1, aimAcc));
     }
 
     @EventTarget

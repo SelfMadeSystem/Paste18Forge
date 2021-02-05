@@ -10,6 +10,6 @@ public class AAStat implements HudStat {
 
     @Override
     public String getStatString(HUD hud) {
-        return "AA: " + ((int) hud.accuracy * 100) + "%";
+        return "AA: " + ((int) (hud.aimAcc * 100)) + "%";
     }
 }
