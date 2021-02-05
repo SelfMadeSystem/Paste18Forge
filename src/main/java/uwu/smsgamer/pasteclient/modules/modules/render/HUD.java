@@ -14,6 +14,7 @@ import com.darkmagician6.eventapi.EventTarget;
 import com.darkmagician6.eventapi.types.EventType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -213,6 +214,17 @@ public class HUD extends PasteModule {
     public void onSwing(SwingArmEvent event) {
         if (event.getEventType().equals(EventType.PRE)) {
             cps.add(System.currentTimeMillis());
+        }
+    }
+
+    @EventTarget
+    public void onHit(EntityHitEvent event) {
+        if (event.getEventType().equals(EventType.PRE)) {
+            if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY
+              && mc.objectMouseOver.entityHit.getEntityId() == event.target.getEntityId()) {
+                Vec3 vec3 = mc.getRenderViewEntity().getPositionEyes(1.0F);
+                lastRange = mc.objectMouseOver.hitVec.distanceTo(vec3);
+            }
         }
     }
 }

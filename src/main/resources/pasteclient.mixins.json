@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "client.MixinMinecraft",
-    "network.MixinNetworkManager",
     "entity.MixinEntity",
     "entity.MixinEntityPlayer",
     "entity.MixinEntityPlayerSP",
@@ -13,9 +12,12 @@
     "gui.MixinGuiIngame",
     "gui.MixinGuiScreen",
     "gui.MixinGuiSpectator",
-    "gui.MixinGuiChat",
+    "network.MixinNetworkManager",
     "render.MixinEntityRenderer",
     "util.MixinMouseHelper",
     "util.MixinTimer"
+  ],
+  "client": [
+    "client.MixinPlayerControllerMP"
   ]
 }
