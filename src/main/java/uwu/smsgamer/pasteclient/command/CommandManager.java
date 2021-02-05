@@ -30,6 +30,7 @@ public class CommandManager { //TODO: GET REDONE THIS IS SHIT
         addCommand(new LoginCommand());
         addCommand(new SessionCommand());
         addCommand(new ConnectCommand());
+        addCommand(new ConfigCommand());
 //        addCommand(new ScriptCommand());
     }
 

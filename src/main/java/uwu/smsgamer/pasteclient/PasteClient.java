@@ -54,7 +54,7 @@ public class PasteClient {
     public ModuleManager moduleManager;
     public CommandManager commandManager;
     //    public ValueManager valueManager;
-    private FileManager fileManager;
+    public FileManager fileManager;
 //    public ScriptManager scriptManager;
 
     public PasteClient() {
@@ -74,7 +74,7 @@ public class PasteClient {
         commandManager.addCommands();
         moduleManager.addModules();
 
-        fileManager.load();
+        fileManager.loadDef();
 
         ForgeEventHandler.getInstance();
 
@@ -83,7 +83,7 @@ public class PasteClient {
 
     public void stopClient() {
         try {
-            fileManager.save();
+            fileManager.saveDef();
             DiscordRPC.discordShutdown();
         } catch (Exception e) {
             System.err.println("Failed to save settings:");

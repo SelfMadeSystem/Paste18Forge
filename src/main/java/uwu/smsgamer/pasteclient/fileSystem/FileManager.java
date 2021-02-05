@@ -25,12 +25,21 @@ import java.util.*;
 import java.util.zip.*;
 
 public class FileManager {
-    private final File clientDir = new File(Minecraft.getMinecraft().mcDataDir, PasteClient.CLIENT_NAME);
+    public static final File clientDir = new File(Minecraft.getMinecraft().mcDataDir, PasteClient.CLIENT_NAME);
     private final File backupDir = new File(clientDir, "backups");
     private final File scriptsDir = new File(clientDir, "scripts");
     private final File saveFile = new File(clientDir, "client.json");
+    public static final File configDir = new File(clientDir, "config");
 
-    public void save() throws Exception {
+    public void saveDef() throws Exception {
+        save(saveFile);
+    }
+
+    public void save(String name) throws Exception {
+        save(new File(configDir, name));
+    }
+
+    public void save(File saveFile) throws Exception {
         //noinspection ResultOfMethodCallIgnored
         clientDir.mkdirs();
 
@@ -86,13 +95,21 @@ public class FileManager {
         return obj;
     }
 
-    public void load() {
-        if (!saveFile.exists()) return;
+    public void loadDef() {
+        load(saveFile);
+    }
+
+    public void load(String name) {
+        load(new File(configDir, name));
+    }
+
+    public void load(File configFile) {
+        if (!configFile.exists()) return;
 
         List<String> backupReasons = new ArrayList<>();
 
         try {
-            JsonObject object = (JsonObject) new JsonParser().parse(new InputStreamReader(new FileInputStream(saveFile)));
+            JsonObject object = (JsonObject) new JsonParser().parse(new InputStreamReader(new FileInputStream(configFile)));
 
             //<editor-fold desc="metadata">
             if (object.has("metadata")) {
