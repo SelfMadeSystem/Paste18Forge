@@ -61,6 +61,14 @@ public class PositionValue extends VoidValue {
         this.relativeYaw = relativeYaw;
     }
 
+    // For Yaw w/o others
+    public PositionValue(String name, String description, boolean relativeYaw, int i) {
+        super(name, description);
+        addXYZChildren();
+        addChild(new BoolValue("RelativeYaw", "Whether the position is relative to the player's yaw or not.", relativeYaw));
+        this.relativeYaw = relativeYaw;
+    }
+
     private void addXYZChildren() {
         addChild(new NumberValue("X", "Coordinates in X axis", 0, -10, 10, 0.000001, NumberValue.NumberType.DECIMAL) {
             @Override

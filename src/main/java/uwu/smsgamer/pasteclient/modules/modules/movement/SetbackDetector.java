@@ -35,6 +35,7 @@ public class SetbackDetector extends PasteModule {
             if (disableModules.getValue()) {
                 PasteClient.INSTANCE.moduleManager.getModule("Fly", false).setState(false);
                 PasteClient.INSTANCE.moduleManager.getModule("Speed", false).setState(false);
+                PasteClient.INSTANCE.moduleManager.getModule("Velocity", false).setState(false);
             }
         }
     }

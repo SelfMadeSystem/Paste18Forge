@@ -22,18 +22,23 @@ public class ChatUtils {
     public static final String SECONDARY_COLOR = "§1";
     private static final String PREFIX = PRIMARY_COLOR + "[" + SECONDARY_COLOR + PasteClient.CLIENT_NAME + PRIMARY_COLOR + "] ";
 
-    public static void send(final String s) {
+    public static void send(String s, Object... o) {
         if (Minecraft.getMinecraft().thePlayer == null) return;
+        s = f(s, o);
         JsonObject object = new JsonObject();
         object.addProperty("text", s);
         Minecraft.getMinecraft().thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(object.toString()));
     }
 
-    public static void success(String s) {
-        info(s);
+    public static void success(String s, Object... o) {
+        info(s, o);
     }
 
-    public static void info(String s) {
-        send(PREFIX + s);
+    public static void info(String s, Object... o) {
+        send(PREFIX + s, o);
+    }
+
+    public static String f(String s, Object... o) {
+        return String.format(s, o);
     }
 }
