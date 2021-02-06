@@ -12,6 +12,7 @@
     "gui.MixinGuiIngame",
     "gui.MixinGuiScreen",
     "gui.MixinGuiSpectator",
+    "network.MixinNetHandlerPlayClient",
     "network.MixinNetworkManager",
     "render.MixinEntityRenderer",
     "util.MixinMouseHelper",
