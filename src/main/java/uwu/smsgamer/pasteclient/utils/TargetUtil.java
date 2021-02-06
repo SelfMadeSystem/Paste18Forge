@@ -145,6 +145,7 @@ public class TargetUtil {
 
     public static boolean isInRange(Entity entity, double maxRange, double maxAngle){
         if (entity == null) return false;
+        if (!mc.theWorld.getLoadedEntityList().contains(entity)) return false;
         double dist = entity.getDistanceToEntity(mc.thePlayer);
         double angle = Math.abs(new RotationUtil(entity).getRotation().playerYawDiff());
         return dist < maxRange && angle < maxAngle;
