@@ -20,6 +20,23 @@ public class AimBot extends PasteModule {
       0, "Normal",
       1, "MouseHelper",
       2, "GCD Patch");
+    public IntChoiceValue aimWhereMode = addIntChoice("AimWhereMode", "Mode of where to aim (?).", 0,
+      0, "Closest",
+      1, "Edge",
+      2, "Random",
+      3, "PingPong");
+    public NumberValue pingPongHTime = (NumberValue) addValue(new NumberValue("PingPongHTime", "Speed for ping pong horizontal in ms.", 1000, 50, 5000, 50, NumberValue.NumberType.INTEGER) {
+        @Override
+        public boolean isVisible() {
+            return aimWhereMode.getValue() == 3;
+        }
+    });
+    public NumberValue pingPongVTime = (NumberValue) addValue(new NumberValue("PingPongVTime", "Speed for ping pong vertical in ms.", 2000, 50, 5000, 50, NumberValue.NumberType.INTEGER) {
+        @Override
+        public boolean isVisible() {
+            return aimWhereMode.getValue() == 3;
+        }
+    });
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -140,7 +157,8 @@ public class AimBot extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
+            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).
+              getRotation(aimWhereMode.getValue(), pingPongHTime.getInt(), pingPongVTime.getInt());
             if (aimMode.getValue() != 1) {
                 rotation = RotationUtil.limitAngleChange(Rotation.player(), rotation, aimLimit);
                 Rotation r = RotationUtil.rotationDiff(rotation, Rotation.player());

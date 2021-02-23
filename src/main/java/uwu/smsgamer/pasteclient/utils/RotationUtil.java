@@ -5,6 +5,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.*;
 
+import java.util.Random;
+
 public class RotationUtil {
     private final Entity target;
     private final float yaw;
@@ -79,7 +81,7 @@ public class RotationUtil {
     }
 
     public RotationInfo getRotationInfo(boolean setY, double sY, double hLimit, double vLimit) {
-        vLimit/=2;
+        vLimit /= 2;
         double length = 100000;
         AxisAlignedBB aabb = target.getEntityBoundingBox();
         double hAdd = hLimit > 0 ? hLimit / 2 : 1;
@@ -118,7 +120,7 @@ public class RotationUtil {
         if (!isBetweenAngles(minRotation.pitch, maxRotation.pitch, pPitch)) {
             pPitch = closestRotation.pitch;
         }
-        return new RotationInfo(new Rotation(pYaw, pPitch), minRotation, maxRotation);
+        return new RotationInfo(new Rotation(wrapDegrees(yaw), pitch), new Rotation(pYaw, pPitch), minRotation, maxRotation);
     }
 
     public Rotation getRotation() {
@@ -180,14 +182,60 @@ public class RotationUtil {
     }
 
     public static class RotationInfo {
+        public static final Random random = new Random();
+        public static Rotation lastRandom;
+        public final Rotation currentRotation;
         public final Rotation closestRotation;
         public final Rotation minRotation;
         public final Rotation maxRotation;
 
-        public RotationInfo(Rotation closestRotation, Rotation minRotation, Rotation maxRotation) {
+        public RotationInfo(Rotation currentRotation, Rotation closestRotation, Rotation minRotation, Rotation maxRotation) {
+            this.currentRotation = currentRotation;
             this.closestRotation = closestRotation;
             this.minRotation = minRotation;
             this.maxRotation = maxRotation;
+        }
+
+        public Rotation getRotation(int mode, int pingPongHTime, int pingPongVTime) {
+            switch (mode) {
+                case 1:
+                    return edge();
+                case 2:
+                    return random();
+                case 3:
+                    return pingPong(pingPongHTime, pingPongVTime);
+                default:
+                    return closestRotation;
+            }
+        }
+
+        public Rotation diff() {
+            return new Rotation(angleDiff(minRotation.yaw, maxRotation.yaw), angleDiff(minRotation.pitch, maxRotation.pitch));
+        }
+
+        public Rotation pingPong(int hTime, int vTime) {
+            Rotation diff = diff();
+            return new Rotation(minRotation.yaw - diff.yaw * time(hTime),
+              minRotation.pitch - diff.pitch * time(vTime));
+        }
+
+        public Rotation random() {
+            if (lastRandom != null && currentRotation.getDiffS(lastRandom) > 5) return lastRandom;
+            Rotation diff = diff();
+            return lastRandom = new Rotation(minRotation.yaw - diff.yaw * random.nextDouble(),
+              minRotation.pitch - diff.pitch * random.nextDouble());
+        }
+
+        public Rotation edge() {
+            double minYDiff = angleDiff(minRotation.yaw, closestRotation.yaw);
+            double maxYDiff = angleDiff(maxRotation.yaw, closestRotation.yaw);
+            if (minYDiff < maxYDiff) return new Rotation(minRotation.yaw, closestRotation.pitch);
+            return new Rotation(maxRotation.yaw, closestRotation.pitch);
+        }
+
+        public static double time(double s) {
+            double l = (System.currentTimeMillis() % s * 2);
+            return (l > s ? -l + s * 2 : l) / s;
         }
     }
 }

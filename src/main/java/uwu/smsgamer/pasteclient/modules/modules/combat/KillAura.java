@@ -32,7 +32,24 @@ public class KillAura extends PasteModule {
       1, "GCD Patch",
       2, "To MouseHelper Pixels",
       3, "Emulate MouseHelper",
-      4, "AimBot"); // Todo: Meow
+      4, "AimBot");
+    public IntChoiceValue aimWhereMode = addIntChoice("AimWhereMode", "Mode of where to aim (?).", 0,
+      0, "Closest",
+      1, "Edge",
+      2, "Random",
+      3, "PingPong");
+    public NumberValue pingPongHTime = (NumberValue) addValue(new NumberValue("PingPongHTime", "Speed for ping pong horizontal in ms.", 1000, 50, 5000, 50, NumberValue.NumberType.INTEGER) {
+        @Override
+        public boolean isVisible() {
+            return aimWhereMode.getValue() == 3;
+        }
+    });
+    public NumberValue pingPongVTime = (NumberValue) addValue(new NumberValue("PingPongVTime", "Speed for ping pong vertical in ms.", 2000, 50, 5000, 50, NumberValue.NumberType.INTEGER) {
+        @Override
+        public boolean isVisible() {
+            return aimWhereMode.getValue() == 3;
+        }
+    });
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -108,6 +125,7 @@ public class KillAura extends PasteModule {
             mh.pitch = mc.thePlayer.rotationPitch;
             startAngle = Rotation.player();
             prevRotation = Rotation.player();
+            RotationUtil.RotationInfo.lastRandom = null;
         }
     }
 
@@ -164,7 +182,8 @@ public class KillAura extends PasteModule {
             }
             lastTarget = target;
         } else target = lastTarget;
-        CASE: if (target != null) {
+        CASE:
+        if (target != null) {
             if (aimMode.getValue() == 4) {
                 AIMBOTMOUSEMOVETHINGYFUCKMYLIFE(event);
                 break CASE;
@@ -174,7 +193,8 @@ public class KillAura extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
+            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue())
+              .getRotation(aimWhereMode.getValue(), pingPongHTime.getInt(), pingPongVTime.getInt());
             if (aimMode.getValue() != 3) {
                 rotation = RotationUtil.limitAngleChange(mh.toRotation(), rotation, aimLimit);
                 Rotation r = RotationUtil.rotationDiff(rotation, new Rotation(mh.yaw, mh.pitch));
@@ -238,7 +258,8 @@ public class KillAura extends PasteModule {
         boolean setY = aimWhere.getValue() != 0;
         double sY = getYPos();
 
-        Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
+        Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).
+          getRotation(aimWhereMode.getValue(), pingPongHTime.getInt(), pingPongVTime.getInt());
         rotation = RotationUtil.rotationDiff(rotation, Rotation.player());
         boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
         mh.deltaX = ((int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
