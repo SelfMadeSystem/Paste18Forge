@@ -17,6 +17,7 @@ public class AimAssist extends PasteModule {
       1, "Lowest Health",
       2, "Least Angle");
     public RangeValue hLimit = (RangeValue) addValue(new RangeValue("HLimit", "Horizontal limit on entity for aiming.", 1, 1, 0, 1, 0.01, NumberValue.NumberType.PERCENT));
+    public RangeValue vLimit = (RangeValue) addValue(new RangeValue("VLimit", "Vertical limit on entity for aiming.", 1, 1, 0, 3, 0.01, NumberValue.NumberType.PERCENT));
     public IntChoiceValue aimWhere = addIntChoice("AimWhere", "Where to aim on the entity.", 0,
       0, "Auto",
       1, "Top",
@@ -87,7 +88,7 @@ public class AimAssist extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue());
+            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
             Rotation angleDiff = RotationUtil.rotationDiff(rotation, Rotation.player());
             IMixinMouseHelper mh = (IMixinMouseHelper) mc.mouseHelper;
             mh.setMode(3);
@@ -145,8 +146,14 @@ public class AimAssist extends PasteModule {
         double lenY = (aabb.maxY - aabb.minY);
         double lenZ = (aabb.maxZ - aabb.minZ) / 2;
         boolean setY = aimWhere.getValue() != 0;
-        aabb = new AxisAlignedBB(entity.posX - lenX * hLimit.getRandomValue(), entity.posY + lenY * (setY ? getYPos() : 0), entity.posZ - lenZ * hLimit.getRandomValue(),
-          entity.posX + lenX * hLimit.getRandomValue(), entity.posY + lenY * (setY ? getYPos() : 1), entity.posZ + lenZ * hLimit.getRandomValue());
+        double h = hLimit.getRandomValue();
+        double v = vLimit.getRandomValue() / 2;
+        aabb = new AxisAlignedBB(entity.posX - lenX * h,
+          entity.posY + lenY * (setY ? getYPos() : 0.5 - v),
+          entity.posZ - lenZ * h,
+          entity.posX + lenX * h,
+          entity.posY + lenY * (setY ? getYPos() : 0.5 + v),
+          entity.posZ + lenZ * h);
         GLUtil.drawAxisAlignedBBRel(aabb, color.getColor());
     }
 }

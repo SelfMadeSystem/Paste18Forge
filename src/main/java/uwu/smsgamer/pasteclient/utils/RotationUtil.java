@@ -25,10 +25,11 @@ public class RotationUtil {
     }
 
     public Rotation getClosestRotation() {
-        return getClosestRotation(false, 0, 1);
+        return getClosestRotation(false, 0, 1, 1);
     }
 
-    public Rotation getClosestRotation(boolean setY, double sY, double hLimit) {
+    // TODO: AimMode: Closest, Edge, Farthest, Random, PingPong w/ speed
+    public Rotation getClosestRotation(boolean setY, double sY, double hLimit, double vLimit) {
         double length = 100000;
         Rotation closestRotation = new Rotation(-1, -1);
         AxisAlignedBB aabb = target.getEntityBoundingBox();
@@ -46,9 +47,12 @@ public class RotationUtil {
         AtomicDouble setPitch = null;
         double pYaw = wrapDegrees(yaw);
         double pPitch = pitch;
-        for (double x = -hLimit; x <= hLimit; x += hLimit > 0 ? hLimit / 8 : 1) { //prevents infinite loop
-            for (double z = -hLimit; z <= hLimit; z += hLimit > 0 ? hLimit / 8 : 1) {
-                for (double y = setY ? sY : 0; y <= (setY ? sY : 1); y += 0.1) {
+        double hAdd = hLimit > 0 ? hLimit / 8 : 1;
+        double vAdd = vLimit > 0 ? vLimit / 8 : 1;
+        vLimit /= 2;
+        for (double x = -hLimit; x <= hLimit; x += hAdd) { //prevents infinite loop
+            for (double z = -hLimit; z <= hLimit; z += hAdd) {
+                for (double y = setY ? sY : 0.5 - vLimit; y <= (setY ? sY : vLimit + 0.5); y += vAdd) {
                     Vec3 cPos = ePos.addVector(lenX * x, lenY * y, lenZ * z);
                     Rotation r = toRotation(cPos.xCoord - pPos.xCoord, pPos.yCoord - cPos.yCoord, cPos.zCoord - pPos.zCoord);
                     if (r.getLength() <= length) {

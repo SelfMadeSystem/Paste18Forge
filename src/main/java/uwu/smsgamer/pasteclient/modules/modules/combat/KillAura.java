@@ -54,6 +54,7 @@ public class KillAura extends PasteModule {
         }
     });
     public RangeValue hLimit = (RangeValue) addValue(new RangeValue("HLimit", "Horizontal limit on entity for aiming.", 1, 1, 0, 3, 0.01, NumberValue.NumberType.PERCENT));
+    public RangeValue vLimit = (RangeValue) addValue(new RangeValue("VLimit", "Vertical limit on entity for aiming.", 1, 1, 0, 3, 0.01, NumberValue.NumberType.PERCENT));
     public NumberValue aimLimit = (NumberValue) addValue(new NumberValue("AimLimit", "Limits your aim in degrees.", 90, 0, 90, 1, NumberValue.NumberType.INTEGER));
     public NumberValue aimLimitVary = (NumberValue) addValue(new NumberValue("AimLimitVary", "Varies the limit of your aim in degrees.", 5, 0, 15, 0.5, NumberValue.NumberType.DECIMAL));
     public NumberValue aimRandomYaw = (NumberValue) addValue(new NumberValue("AimRandomYaw", "Randomizes your yaw in degrees.", 2, 0, 15, 0.1, NumberValue.NumberType.DECIMAL));
@@ -173,7 +174,7 @@ public class KillAura extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue());
+            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
             if (aimMode.getValue() != 3) {
                 rotation = RotationUtil.limitAngleChange(mh.toRotation(), rotation, aimLimit);
                 Rotation r = RotationUtil.rotationDiff(rotation, new Rotation(mh.yaw, mh.pitch));
@@ -237,7 +238,7 @@ public class KillAura extends PasteModule {
         boolean setY = aimWhere.getValue() != 0;
         double sY = getYPos();
 
-        Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue());
+        Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
         rotation = RotationUtil.rotationDiff(rotation, Rotation.player());
         boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
         mh.deltaX = ((int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +
@@ -409,8 +410,14 @@ public class KillAura extends PasteModule {
         double lenY = (aabb.maxY - aabb.minY);
         double lenZ = (aabb.maxZ - aabb.minZ) / 2;
         boolean setY = aimWhere.getValue() != 0;
-        aabb = new AxisAlignedBB(entity.posX - lenX * hLimit.getRandomValue(), entity.posY + lenY * (setY ? getYPos() : 0), entity.posZ - lenZ * hLimit.getRandomValue(),
-          entity.posX + lenX * hLimit.getRandomValue(), entity.posY + lenY * (setY ? getYPos() : 1), entity.posZ + lenZ * hLimit.getRandomValue());
+        double h = hLimit.getRandomValue();
+        double v = vLimit.getRandomValue() / 2;
+        aabb = new AxisAlignedBB(entity.posX - lenX * h,
+          entity.posY + lenY * (setY ? getYPos() : 0.5 - v),
+          entity.posZ - lenZ * h,
+          entity.posX + lenX * h,
+          entity.posY + lenY * (setY ? getYPos() : 0.5 + v),
+          entity.posZ + lenZ * h);
         GLUtil.drawAxisAlignedBBRel(aabb, color.getColor());
     }
 }
