@@ -78,6 +78,49 @@ public class RotationUtil {
         return new Rotation(setYaw.get(), setPitch.get());
     }
 
+    public RotationInfo getRotationInfo(boolean setY, double sY, double hLimit, double vLimit) {
+        vLimit/=2;
+        double length = 100000;
+        AxisAlignedBB aabb = target.getEntityBoundingBox();
+        double hAdd = hLimit > 0 ? hLimit / 2 : 1;
+        double vAdd = vLimit > 0 ? vLimit / 2 : 1;
+
+        Vec3 pPos = p().getPositionVector();
+        pPos = pPos.addVector(0, p().getEyeHeight(), 0);
+        Vec3 ePos = target.getPositionVector();
+        double lenX = (aabb.maxX - aabb.minX) / 2;
+        double lenY = (aabb.maxY - aabb.minY);
+        double lenZ = (aabb.maxZ - aabb.minZ) / 2;
+
+        Rotation closestRotation = new Rotation(-1, -1);
+        Rotation minRotation = new Rotation(1000, 1000);
+        Rotation maxRotation = new Rotation(-1000, -1000);
+        for (double x = -hLimit; x <= hLimit; x += hAdd) {
+            for (double y = setY ? sY : 0.5 - vLimit; y <= vLimit + 0.5; y += vAdd) {
+                for (double z = -hLimit; z <= hLimit; z += hAdd) {
+                    Vec3 cPos = ePos.addVector(lenX * x, lenY * y, lenZ * z);
+                    Rotation r = toRotation(cPos.xCoord - pPos.xCoord, pPos.yCoord - cPos.yCoord, cPos.zCoord - pPos.zCoord);
+                    if (r.getLength() <= length) {
+                        length = r.getLength();
+                        closestRotation = r;
+                    }
+                    minRotation = new Rotation(Math.min(r.yaw, minRotation.yaw), Math.min(r.pitch, minRotation.pitch));
+                    maxRotation = new Rotation(Math.max(r.yaw, maxRotation.yaw), Math.max(r.pitch, maxRotation.pitch));
+                }
+            }
+        }
+        double pYaw = wrapDegrees(yaw);
+        double pPitch = pitch;
+
+        if (!isBetweenAngles(minRotation.yaw, maxRotation.yaw, pYaw)) {
+            pYaw = closestRotation.yaw;
+        }
+        if (!isBetweenAngles(minRotation.pitch, maxRotation.pitch, pPitch)) {
+            pPitch = closestRotation.pitch;
+        }
+        return new RotationInfo(new Rotation(pYaw, pPitch), minRotation, maxRotation);
+    }
+
     public Rotation getRotation() {
         return toRotation(target.posX - p().posX, p().posY - target.posY + p().getEyeHeight(), target.posZ - p().posZ);
     }
@@ -134,5 +177,17 @@ public class RotationUtil {
 
     public static Rotation rotationDiff(final Rotation a, final Rotation b) {
         return new Rotation(angleDiff(a.yaw, b.yaw), angleDiff(a.pitch, b.pitch));
+    }
+
+    public static class RotationInfo {
+        public final Rotation closestRotation;
+        public final Rotation minRotation;
+        public final Rotation maxRotation;
+
+        public RotationInfo(Rotation closestRotation, Rotation minRotation, Rotation maxRotation) {
+            this.closestRotation = closestRotation;
+            this.minRotation = minRotation;
+            this.maxRotation = maxRotation;
+        }
     }
 }

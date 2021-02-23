@@ -144,4 +144,9 @@ public class Rotation {
             player.motionZ += calcForward * yawCos + calcStrafe * yawSin;
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("Rotation{yaw=%.2f, pitch=%.2f}", yaw, pitch);
+    }
 }

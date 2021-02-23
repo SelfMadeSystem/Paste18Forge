@@ -174,7 +174,7 @@ public class KillAura extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
+            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
             if (aimMode.getValue() != 3) {
                 rotation = RotationUtil.limitAngleChange(mh.toRotation(), rotation, aimLimit);
                 Rotation r = RotationUtil.rotationDiff(rotation, new Rotation(mh.yaw, mh.pitch));
@@ -238,7 +238,7 @@ public class KillAura extends PasteModule {
         boolean setY = aimWhere.getValue() != 0;
         double sY = getYPos();
 
-        Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
+        Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
         rotation = RotationUtil.rotationDiff(rotation, Rotation.player());
         boolean moving = rotation.yawToMouse() != 0 || rotation.pitchToMouse() != 0;
         mh.deltaX = ((int) (Math.min(aimLimit, Math.max(-aimLimit, rotation.yawToMouse())) +

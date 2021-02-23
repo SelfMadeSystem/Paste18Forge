@@ -88,7 +88,7 @@ public class AimAssist extends PasteModule {
             boolean setY = aimWhere.getValue() != 0;
             double sY = getYPos();
 
-            Rotation rotation = util.getClosestRotation(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue());
+            Rotation rotation = util.getRotationInfo(setY, sY, hLimit.getRandomValue(), vLimit.getRandomValue()).closestRotation;
             Rotation angleDiff = RotationUtil.rotationDiff(rotation, Rotation.player());
             IMixinMouseHelper mh = (IMixinMouseHelper) mc.mouseHelper;
             mh.setMode(3);
