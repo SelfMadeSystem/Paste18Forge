@@ -437,7 +437,7 @@ public class KillAura extends PasteModule {
           entity.posY + lenY * (setY ? getYPos() : 0.5 - v),
           entity.posZ - lenZ * h,
           entity.posX + lenX * h,
-          entity.posY + lenY * (setY ? getYPos() : 0.5 + v),
+          entity.posY + lenY * ((setY ? getYPos() : 0.5) + v),
           entity.posZ + lenZ * h);
         GLUtil.drawAxisAlignedBBRel(aabb, color.getColor());
     }

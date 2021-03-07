@@ -181,6 +181,17 @@ public class RotationUtil {
         return new Rotation(angleDiff(a.yaw, b.yaw), angleDiff(a.pitch, b.pitch));
     }
 
+    public static Rotation linearInterpolate(final Rotation a, final Rotation b, final double amount) {
+        Rotation diff = rotationDiff(a, b);
+        return new Rotation(a.yaw + diff.yaw * amount, a.pitch + diff.pitch * amount);
+    }
+
+    public static Rotation linearLimitAngleChange(final Rotation a, final Rotation b, double max) {
+        Rotation diff = rotationDiff(a, b);
+        max = Math.min(max, diff.getLength());
+        return linearInterpolate(a, b, Math.min(1, max / diff.getLength()));
+    }
+
     public static class RotationInfo {
         public static final Random random = new Random();
         public static Rotation lastRandom;
@@ -210,7 +221,7 @@ public class RotationUtil {
         }
 
         public Rotation diff() {
-            return new Rotation(angleDiff(minRotation.yaw, maxRotation.yaw), angleDiff(minRotation.pitch, maxRotation.pitch));
+            return rotationDiff(minRotation, maxRotation);
         }
 
         public Rotation pingPong(int hTime, int vTime) {
