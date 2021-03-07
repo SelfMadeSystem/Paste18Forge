@@ -97,8 +97,10 @@ public class RotationUtil {
         Rotation closestRotation = new Rotation(-1, -1);
         Rotation minRotation = new Rotation(1000, 1000);
         Rotation maxRotation = new Rotation(-1000, -1000);
+
+        double maxY = (setY ? sY : 0.5) + vLimit;
         for (double x = -hLimit; x <= hLimit; x += hAdd) {
-            for (double y = setY ? sY : 0.5 - vLimit; y <= vLimit + 0.5; y += vAdd) {
+            for (double y = setY ? sY : 0.5 - vLimit; y <= maxY; y += vAdd) {
                 for (double z = -hLimit; z <= hLimit; z += hAdd) {
                     Vec3 cPos = ePos.addVector(lenX * x, lenY * y, lenZ * z);
                     Rotation r = toRotation(cPos.xCoord - pPos.xCoord, pPos.yCoord - cPos.yCoord, cPos.zCoord - pPos.zCoord);
